@@ -26,48 +26,56 @@ while True:
     # get a list of qr codes in the grayscale image, looking only for qr codes
     detectedQr = zbar.decode(gray, symbols=[zbar.ZBarSymbol.QRCODE])
 
-    for qr in detectedQr:
-        # get the tag data
-        data = str(qr.data)
+    # if we can't find the tag, don't do anything
+    if len(detectedQr) < 1:
+        cv.putText(frame, "tag not found, stopping...", (0, 20), font, 1, (0, 0, 255), 2)
+    else:
+        for qr in detectedQr:
+            # get the tag data
+            data = str(qr.data)
 
-        # check that the tag is in fact the follow tag
-        if data == "b'follow me'":
-            # get the bounding box
-            (x, y, w, h) = qr.rect
+            # check that the tag is in fact the follow tag
+            if data == "b'follow me'":
+                # get the bounding box
+                (x, y, w, h) = qr.rect
 
-            # get the horizontal center of the qr code
-            centerX = (x + (x + w)) / 2
+                # get the horizontal center of the qr code
+                centerX = (x + (x + w)) / 2
 
-            # get the horizontal center of the frame
-            centerFrame = width / 2
+                # get the horizontal center of the frame
+                centerFrame = width / 2
 
-            # get the are of the tag
-            area = w * h
+                # get the are of the tag
+                area = w * h
 
-            # draw the bounding box in red with a width of 1
-            cv.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 1)
-            # also draw text near the bounding box with the code's data on it
-            cv.putText(frame, data + str(area), (x, y), font, 1, (0, 0, 255), 2)
+                # draw the bounding box in red with a width of 1
+                cv.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 1)
+                # also draw text near the bounding box with the code's data on it
+                cv.putText(frame, data, (x, y), font, 1, (0, 0, 255), 2)
 
-            # determine if the tag is off center and if so how much to turn by
-            # TODO: add implementation for motor control
-            # if the center of the tag is to the right of the center of the screen, turn right
-            if centerX > centerFrame + turnThresh:
-                cv.putText(frame, "turn right", (0, 20), font, 1, (0, 0, 255), 2)
-            # if the center of the tag is to the left of the center of the screen, turn left
-            elif centerX < centerFrame - turnThresh:
-                cv.putText(frame, "turn left", (0, 20), font, 1, (0, 0, 255), 2)
+                # determine if the tag is off center and if so how much to turn by
+                # TODO: add implementation for motor control
+                # if the center of the tag is to the right of the center of the screen, turn right
+                if centerX > centerFrame + turnThresh:
+                    cv.putText(frame, "turn right", (0, 20), font, 1, (0, 0, 255), 2)
+                # if the center of the tag is to the left of the center of the screen, turn left
+                elif centerX < centerFrame - turnThresh:
+                    cv.putText(frame, "turn left", (0, 20), font, 1, (0, 0, 255), 2)
+                else:
+                    cv.putText(frame, "centered", (0, 20), font, 1, (0, 0, 255), 2)
+
+                # TODO: add implementation for motor control
+                # use the area of the tag to figure out whether to go forward or backward
+                if area > maxAcceptableTagSize:
+                    cv.putText(frame, "go backward", (0, 40), font, 1, (0, 0, 255), 2)
+                elif area < minAcceptableTagSize:
+                    cv.putText(frame, "go forward", (0, 40), font, 1, (0, 0, 255), 2)
+                else:
+                    cv.putText(frame, "stay put", (0, 40), font, 1, (0, 0, 255), 2)
+
+            # if we can't find the follow me tag, stop the motors so as to not injure anything
             else:
-                cv.putText(frame, "centered", (0, 20), font, 1, (0, 0, 255), 2)
-
-            # TODO: add implementation for motor control
-            # use the area of the tag to figure out whether to go forward or backward
-            if area > maxAcceptableTagSize:
-                cv.putText(frame, "go backward", (0, 40), font, 1, (0, 0, 255), 2)
-            elif area < minAcceptableTagSize:
-                cv.putText(frame, "go forward", (0, 40), font, 1, (0, 0, 255), 2)
-            else:
-                cv.putText(frame, "stay put", (0, 40), font, 1, (0, 0, 255), 2)
+                cv.putText(frame, "tag not found, stopping...", (0, 20), font, 1, (0, 0, 255), 2)
 
     cv.imshow("Autonomous snack cart", frame)
 

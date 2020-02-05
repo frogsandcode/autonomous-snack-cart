@@ -1,6 +1,13 @@
 import cv2 as cv
 import pyzbar.pyzbar as zbar
 
+"""
+    Works fairly well, but has issues.
+    - loses code if it gets skewed too far
+    - code needs to be very flat and very well lit for it to work
+    - this could be a solution for a cart that could run in a circle from qr code to qr code
+"""
+
 # get the video capture
 vid = cv.VideoCapture(0)
 
